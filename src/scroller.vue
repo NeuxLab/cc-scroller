@@ -215,6 +215,10 @@ export default {
   height: 100%;
   width: 100%;
 
+  ol.list-group {
+    max-height: none;
+  }
+
   .scroller-wrapper {
     width: 100%;
     height: 100%;
