@@ -1,7 +1,7 @@
 <template>
   <div class='scroller select-list extension-list'>
     <ol class='scroller-wrapper list-group' ref='wrapper' :class="{'forbid-scroll':!scrollable , 'vertical': !horizontal, 'horizontal': horizontal }">
-      <li class='scroller-item' v-for="(item, index) in items" :class="{'selected': current === index, 'on-wrapper': landmarks[index] === 0}" v-on:click='itemClick(index)'>
+      <li class='scroller-item' v-for="(item, index) in items" :class="[ current === index ? active : '', landmarks[index] === 0 ? 'on-wrapper': '' ]" v-on:click='itemClick(index)'>
         <slot :index='index' :item="item"></slot>
       </li>
     </ol>
@@ -24,7 +24,13 @@ export default {
       scrollListener: null
     }
   },
-  props: ["items"],
+  props: {
+    items: null,
+    active: {
+      type: String,
+      default: "selected"
+    }
+  },
   computed: {
     horizontal(){
       return this.$attrs["horizontal"] !== undefined
