@@ -1,10 +1,10 @@
 <template>
   <div class='scroller select-list extension-list'>
-    <ol class='scroller-wrapper list-group' ref='wrapper' :class="{'forbid-scroll':!scrollable , 'vertical': !horizontal, 'horizontal': horizontal }">
+    <draggable element="ol" class='scroller-wrapper list-group' :options="{ disabled: !sortable }" :list="items" ref='wrapper' :class="{'forbid-scroll':!scrollable , 'vertical': !horizontal, 'horizontal': horizontal }" @update="sortChange">
       <li class='scroller-item' v-for="(item, index) in items" :class="[ current === index ? active : '', landmarks[index] === 0 ? 'on-wrapper': '' ]" v-on:click='itemClick(index)'>
         <slot :index='index' :item="item"></slot>
       </li>
-    </ol>
+      </draggable>
   </div>
 </template>
 
@@ -12,16 +12,21 @@
 // 需要安装vueify
 // https://github.com/electron-userland/electron-compile/issues/192
 import { debounce } from 'lodash'
+import draggable from 'vuedraggable'
+
 
 export default {
   name: 'scroller',
+  components: {
+    draggable
+  },
   data() {
     return {
       current: -1,
       offset: 0,
       wrapperLength: null,
       landmarks: [], // [-1, -1, 0, 0, 1, 1] marks
-      scrollListener: null
+      scrollListener: null,
     }
   },
   props: {
@@ -40,6 +45,9 @@ export default {
     },
     vertical(){
       return !this.horizontal;
+    },
+    sortable() {
+      return this.$attrs["sortable"] !== undefined
     }
   },
   watch: {
@@ -48,11 +56,9 @@ export default {
       this.current = -1
     },
     current: function(newValue) {
-      console.log('current change', newValue, this.vertical)
       let vm = this
 
-      if (newValue < -1 || newValue >= vm.items.length) return
-      if (newValue === -1) vm.$emit('current-change', newValue)
+      if (newValue < 0 || newValue >= vm.items.length) return
 
       if (vm.landmarks[newValue] < 0) {
         vm.moveTo(newValue, true, () => { vm.$emit('current-change', newValue) })
@@ -68,7 +74,7 @@ export default {
       let vm = this
 
       // marker wrapper length
-      let wrapper = vm.$refs['wrapper']
+      let wrapper = vm.$refs['wrapper'].$el;
 
       // reset scrollLeft
       wrapper.scrollTop = 0
@@ -86,7 +92,7 @@ export default {
       // mark whether or not an item is in the wrapper view box
       // based on landmarks
       let vm = this
-      let children = vm.$refs['wrapper'].children
+      let children = vm.$refs['wrapper'].$el.children
 
       vm.landmarks = []
       for (let index = 0; index < children.length; index++) {
@@ -112,7 +118,7 @@ export default {
     },
     moveTo(index, isFront = true, cb = null) {
       let vm = this
-      let target = vm.$refs['wrapper'].children[index]
+      let target = vm.$refs['wrapper'].$el.children[index]
 
       if (isFront) {
         // offset is target LEFT
@@ -134,7 +140,7 @@ export default {
     applyScroll(cb) {
       // this function only handle details on how to use requireAnimationFrame to scroll wrapper
       let vm = this
-      let wrapper = vm.$refs['wrapper']
+      let wrapper = vm.$refs['wrapper'].$el
       let startTime = null
       let startPosition = (vm.vertical ? wrapper.scrollTop : wrapper.scrollLeft)
       let endPosition = vm.offset
@@ -162,7 +168,6 @@ export default {
       window.requestAnimationFrame(scroll)
     },
     setCurrent(index) {
-      console.log('setCurrent called', index)
       if (index < 0 || index >= this.items.length) return
       this.current = index
     },
@@ -198,18 +203,20 @@ export default {
     itemClick(index) {
       this.current = index
       this.$emit('item-click', index)
+    },
+    sortChange(event) {
+      this.$emit("sort-change", event)
     }
   },
   mounted() {
     // add a listener on wrapper scroll, to update correct offset for landmark use
-    let vm = this
-    let wrapper = vm.$refs['wrapper']
+    let wrapper = this.$refs['wrapper'].$el;
 
-    vm.scrollListener = debounce(function(e) {
-      vm.offset = (vm.vertical ? wrapper.scrollTop : wrapper.scrollLeft)
-      vm.landmark()
+    this.scrollListener = debounce(() => {
+      this.offset = (this.vertical ? wrapper.scrollTop : wrapper.scrollLeft)
+      this.landmark()
     }, 100)
-    wrapper.addEventListener('scroll', vm.scrollListener)
+    wrapper.addEventListener('scroll', this.scrollListener)
   }
 }
 </script>
