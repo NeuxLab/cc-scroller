@@ -209,9 +209,9 @@ export default {
       return true
     },
     prevCurrent(loop = false) {
-      let target = this.current - 1
+      let target =this.current == -1 ? -1 : this.current - 1
       if (!loop && target < 0) return false;
-      this.current = target % this.items.length
+      this.current = (target + this.items.length) % this.items.length
       return true;
     },
     // handle item click
