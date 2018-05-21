@@ -1,7 +1,7 @@
 <template>
   <div class='scroller select-list extension-list'>
     <draggable element="ol" class='scroller-wrapper list-group' :options="{ disabled: !sortable }" :list="items" ref='wrapper' :class="{'forbid-scroll':!scrollable , 'vertical': !horizontal, 'horizontal': horizontal }" @update="sortChange">
-      <li class='scroller-item' v-for="(item, index) in items" :class="[ current === index ? active : '', landmarks[index] === 0 ? 'on-wrapper': '' ]" v-on:click='itemClick(index)' :key="item[key]">
+      <li class='scroller-item' v-for="(item, index) in items" :class="[ current === index ? active : '', landmarks[index] === 0 ? 'on-wrapper': '' ]" v-on:click='itemClick(index)' :key="item[key]" tabindex="-1">
         <slot :index='index' :item="item"></slot>
       </li>
       <li ref="loading"><slot name="loading" v-if="showLoading==1"></slot><slot name="loadedAll" v-if="showLoading==2"></slot><slot name="empty" v-if="showLoading==3"></slot></li>
@@ -61,6 +61,9 @@ export default {
     },
     key() {
       return this.$attrs["key"]
+    },
+    focusable() {
+      return this.$attrs["focusable"] !== undefined
     }
   },
   watch: {
@@ -133,6 +136,7 @@ export default {
     moveTo(index, isFront = true, cb = null) {
       let vm = this
       let target = vm.$refs['wrapper'].$el.children[index]
+      this.focusable && target.focus();
 
       if (isFront) {
         // offset is target LEFT
