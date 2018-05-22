@@ -1,7 +1,7 @@
 <template>
   <div class='scroller select-list extension-list'>
     <draggable element="ol" class='scroller-wrapper list-group' :options="{ disabled: !sortable }" :list="items" ref='wrapper' :class="{'forbid-scroll':!scrollable , 'vertical': !horizontal, 'horizontal': horizontal }" @update="sortChange">
-      <li class='scroller-item' v-for="(item, index) in items" :class="[ current === index ? active : '', landmarks[index] === 0 ? 'on-wrapper': '' ]" v-on:click='itemClick(index)' :key="item[key]" tabindex="-1">
+      <li class='scroller-item' v-for="(item, index) in items" :class="[ current === index ? active : '', landmarks[index] === 0 ? 'on-wrapper': '' ]" v-on="events" :key="item[key]" tabindex="-1" :data-index="index">
         <slot :index='index' :item="item"></slot>
       </li>
       <li ref="loading"><slot name="loading" v-if="showLoading==1"></slot><slot name="loadedAll" v-if="showLoading==2"></slot><slot name="empty" v-if="showLoading==3"></slot></li>
@@ -38,7 +38,11 @@ export default {
       type: String,
       default: "selected"
     },
-    onFetch: Function
+    onFetch: Function,
+    input: {
+      type: Array,
+      default: ["click", "contextmenu"]
+    }
   },
   computed: {
     horizontal(){
@@ -64,7 +68,15 @@ export default {
     },
     focusable() {
       return this.$attrs["focusable"] !== undefined
-    }
+    },
+    events() {
+      return this.input.reduce((last, v) => {
+        last[v] = (event) => {
+          this.current = parseInt(event.currentTarget.dataset.index);
+        }
+        return last;
+      }, {});
+    },
   },
   watch: {
     current(newValue) {
@@ -72,6 +84,9 @@ export default {
 
       if (newValue < 0 || newValue >= vm.items.length) return
       var score = this.performant ? this.getScore(newValue) : this.landmarks[newValue]
+
+      let target = vm.$refs['wrapper'].$el.children[newValue]
+      this.focusable && target.focus();
 
       if (score < 0) {
         vm.moveTo(newValue, true, () => { vm.$emit('current-change', newValue) })
@@ -136,7 +151,6 @@ export default {
     moveTo(index, isFront = true, cb = null) {
       let vm = this
       let target = vm.$refs['wrapper'].$el.children[index]
-      this.focusable && target.focus();
 
       if (isFront) {
         // offset is target LEFT
@@ -217,11 +231,6 @@ export default {
       if (!loop && target < 0) return false;
       this.current = (target + this.items.length) % this.items.length
       return true;
-    },
-    // handle item click
-    itemClick(index) {
-      this.current = index
-      this.$emit('item-click', index)
     },
     sortChange(event) {
       this.$emit("sort-change", event)
