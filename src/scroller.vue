@@ -64,7 +64,7 @@ export default {
       return this.$attrs["paging"] !== undefined
     },
     key() {
-      return this.$attrs["key"]
+      return this.$attrs["unique-key"]
     },
     focusable() {
       return this.$attrs["focusable"] !== undefined
