@@ -85,8 +85,7 @@ export default {
       if (newValue < 0 || newValue >= vm.items.length) return
       var score = this.performant ? this.getScore(newValue) : this.landmarks[newValue]
 
-      let target = vm.$refs['wrapper'].$el.children[newValue]
-      this.focusable && target.focus();
+      this.focusCurrent()
 
       if (score < 0) {
         vm.moveTo(newValue, true, () => { vm.$emit('current-change', newValue) })
@@ -99,7 +98,11 @@ export default {
     items(newValue, oldValue) {
       if (!oldValue || !oldValue.length) {
         this.reset();
+        return;
       }
+      this.$nextTick(() => {
+        this.focusCurrent();
+      })
     },
     showLoading(newValue) {
       if (newValue > 0) {
@@ -113,6 +116,10 @@ export default {
     reset() {
       this.$nextTick(this.initScrollable)
       this.current = -1
+    },
+    focusCurrent(){
+      let target = this.$refs['wrapper'].$el.children[this.current]
+      this.focusable && target && target.focus();
     },
     initScrollable() {
       let vm = this
