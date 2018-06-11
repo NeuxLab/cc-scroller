@@ -270,10 +270,10 @@ export default {
         this.onFetch(this.finishLoading)
       }
     },
-    finishLoading(end) {
+    finishLoading(end, length) {
       clearTimeout(this.loadingTimer);
       if (end) {
-        if (this.items.length) {
+        if (length) {
           this.showLoading = 2
         } else {
           this.showLoading = 3
