@@ -101,6 +101,7 @@ export default {
         return;
       }
       this.$nextTick(() => {
+        this.initScrollable();
         this.focusCurrent();
       })
     },
