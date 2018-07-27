@@ -1,6 +1,9 @@
 <template>
   <div class='scroller select-list extension-list'>
     <draggable element="ol" class='scroller-wrapper list-group' :options="{ disabled: !sortable }" :list="items" ref='wrapper' :class="{'forbid-scroll':!scrollable , 'vertical': !horizontal, 'horizontal': horizontal }" @update="sortChange">
+      <li class='scroller-item'>
+        <slot name="front"></slot>
+      </li>
       <li class='scroller-item' v-for="(item, index) in items" :class="[ current === index ? active : '', landmarks[index] === 0 ? 'on-wrapper': '' ]" v-on="events" :key="item[key]" tabindex="-1" :data-index="index">
         <slot :index='index' :item="item"></slot>
       </li>
