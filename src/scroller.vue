@@ -121,7 +121,8 @@ export default {
       this.current = -1
     },
     focusCurrent(){
-      let target = this.$refs['wrapper'].$el.children[this.current]
+      if (this.current < 0) return;
+      let target = this.$refs['wrapper'].$el.children[this.current + 1]
       this.focusable && target && target.focus();
     },
     initScrollable() {
