@@ -18,7 +18,6 @@
 import { debounce } from 'lodash'
 import draggable from 'vuedraggable'
 
-
 export default {
   name: 'scroller',
   components: {
@@ -104,7 +103,7 @@ export default {
         return;
       }
       this.$nextTick(() => {
-        this.initScrollable();
+        //this.initScrollable();
         this.focusCurrent();
       })
     },
@@ -264,14 +263,22 @@ export default {
         return 0;
       }
     },
-    fetchData(before) {
+    fetchData(before, delay) {
       clearTimeout(this.loadingTimer);
+      var work = () => {
+        before && before();
+        this.showLoading = 1;
+      }
       if (this.onFetch) {
-        this.loadingTimer = setTimeout(() => {
-          before && before();
-          this.showLoading = 1;
-        }, 200)
-        this.onFetch(this.finishLoading)
+        if (delay) {
+          this.loadingTimer = setTimeout(work, delay);
+          this.onFetch(this.finishLoading)
+        } else {
+          work();
+          this.$nextTick(()=>{
+            this.onFetch(this.finishLoading)
+          })
+        }
       }
     },
     finishLoading(end, length) {
@@ -294,7 +301,7 @@ export default {
     this.scrollListener = debounce(() => {
       this.offset = (this.vertical ? wrapper.scrollTop : wrapper.scrollLeft)
       this.landmark()
-      if (this.items.length && this.getScore(this.items.length - 1) == 0) {
+      if (this.items.length && this.getScore(this.items.length - 1) <= 0) {
         this.fetchData();
       }
     }, 100)
