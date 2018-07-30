@@ -31,7 +31,8 @@ export default {
       landmarks: [], // [-1, -1, 0, 0, 1, 1] marks
       scrollListener: null,
       loadingTimer: null,
-      showLoading: 0
+      showLoading: 0,
+      needReset: true
     }
   },
   props: {
@@ -98,8 +99,9 @@ export default {
       }
     },
     items(newValue, oldValue) {
-      if (!oldValue || !oldValue.length) {
+      if (this.needReset || !oldValue || !oldValue.length) {
         this.reset();
+        this.needReset = false;
         return;
       }
       this.$nextTick(() => {
@@ -119,6 +121,7 @@ export default {
     reset() {
       this.$nextTick(this.initScrollable)
       this.current = -1
+      this.needReset = true
     },
     focusCurrent(){
       if (this.current < 0) return;
