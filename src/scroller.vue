@@ -80,6 +80,9 @@ export default {
         return last;
       }, {});
     },
+    wrapper() {
+      return this.$refs["wrapper"].$el;
+    }
   },
   watch: {
     current(newValue) {
@@ -125,14 +128,14 @@ export default {
     },
     focusCurrent(){
       if (this.current < 0) return;
-      let target = this.$refs['wrapper'].$el.children[this.current + 1]
+      let target = this.wrapper.children[this.current + 1]
       this.focusable && target && target.focus();
     },
     initScrollable() {
       let vm = this
 
       // marker wrapper length
-      let wrapper = vm.$refs['wrapper'].$el;
+      let wrapper = vm.wrapper;
 
       // reset scrollLeft
       wrapper.scrollTop = 0
@@ -153,7 +156,7 @@ export default {
         return index;
       }
       let vm = this
-      let children = vm.$refs['wrapper'].$el.children
+      let children = vm.wrapper.children
 
       vm.landmarks = []
       for (let index = 0; index < children.length; index++) {
@@ -164,7 +167,7 @@ export default {
     },
     moveTo(index, isFront = true, cb = null) {
       let vm = this
-      let target = vm.$refs['wrapper'].$el.children[index]
+      let target = vm.wrapper.children[index]
 
       if (isFront) {
         // offset is target LEFT
@@ -185,7 +188,7 @@ export default {
     applyScroll(cb) {
       // this function only handle details on how to use requireAnimationFrame to scroll wrapper
       let vm = this
-      let wrapper = vm.$refs['wrapper'].$el
+      let wrapper = vm.wrapper
       let startTime = null
       let startPosition = (vm.vertical ? wrapper.scrollTop : wrapper.scrollLeft)
       let endPosition = vm.offset
@@ -250,7 +253,7 @@ export default {
       this.$emit("sort-change", event)
     },
     getScore(index) {
-      let children = this.$refs['wrapper'].$el.children
+      let children = this.wrapper.children
       let child = children[index]
       // if an item in the view, then (WRAPPER_LEFT - ITEM_LEFT) > 0 and (WRAPPER_RIGHT - ITEM_RIGHT) < 0
       // Outboundary happens when either too LEFT or too RIGHT, the multiple would always be greater than zero
@@ -300,7 +303,7 @@ export default {
   },
   mounted() {
     // add a listener on wrapper scroll, to update correct offset for landmark use
-    let wrapper = this.$refs['wrapper'].$el;
+    let wrapper = this.wrapper;
 
     this.scrollListener = debounce(() => {
       this.offset = (this.vertical ? wrapper.scrollTop : wrapper.scrollLeft)
