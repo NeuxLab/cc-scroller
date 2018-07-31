@@ -104,6 +104,7 @@ export default {
     items(newValue, oldValue) {
       if (this.needReset || !oldValue || !oldValue.length) {
         this.reset();
+        this.$nextTick(this.initScrollable)
         this.needReset = false;
         return;
       }
@@ -114,15 +115,12 @@ export default {
     },
     showLoading(newValue) {
       if (newValue > 0) {
-        this.$nextTick(() => {
-          this.$refs['loading'].scrollIntoView();
-        })
+        this.$refs['loading'].scrollIntoView();
       }
     }
   },
   methods: {
     reset() {
-      this.$nextTick(this.initScrollable)
       this.current = -1
       this.needReset = true
     },
@@ -282,11 +280,16 @@ export default {
           this.onFetch(this.finishLoading)
         } else {
           work();
-          this.$nextTick(()=>{
+          setTimeout(()=>{
             this.onFetch(this.finishLoading)
           })
         }
       }
+    },
+    fetchMore() {
+      if (this.showLoading == 2) return;
+      this.showLoading = 1;
+      this.onFetch && this.onFetch(this.finishLoading)
     },
     finishLoading(end, length) {
       clearTimeout(this.loadingTimer);
@@ -309,7 +312,7 @@ export default {
       this.offset = (this.vertical ? wrapper.scrollTop : wrapper.scrollLeft)
       this.landmark()
       if (this.items.length && this.getScore(this.items.length - 1) <= 0) {
-        this.fetchData();
+        this.fetchMore();
       }
     }, 100)
     wrapper.addEventListener('scroll', this.scrollListener)
