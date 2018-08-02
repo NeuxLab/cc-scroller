@@ -1,13 +1,11 @@
 <template>
   <div class='scroller select-list extension-list'>
     <draggable element="ol" class='scroller-wrapper list-group' :options="{ disabled: !sortable }" :list="items" ref='wrapper' :class="{'forbid-scroll':!scrollable , 'vertical': !horizontal, 'horizontal': horizontal }" @update="sortChange">
-      <li class='scroller-item'>
-        <slot name="front"></slot>
-      </li>
+      <slot name="front"></slot>
       <li class='scroller-item' v-for="(item, index) in items" :class="[ current === index ? active : '', landmarks[index] === 0 ? 'on-wrapper': '' ]" v-on="events" :key="item[key]" tabindex="-1" :data-index="index">
         <slot :index='index' :item="item"></slot>
       </li>
-      <li ref="loading"><slot name="loading" v-if="showLoading==1"></slot><slot name="loadedAll" v-if="showLoading==2"></slot><slot name="empty" v-if="showLoading==3"></slot></li>
+      <li ref="loading" v-if="hasLoading"><slot name="loading" v-if="showLoading==1"></slot><slot name="loadedAll" v-if="showLoading==2"></slot><slot name="empty" v-if="showLoading==3"></slot></li>
       </draggable>
   </div>
 </template>
@@ -82,6 +80,12 @@ export default {
     },
     wrapper() {
       return this.$refs["wrapper"].$el;
+    },
+    hasFront() {
+      return !!this.$slots.front;
+    },
+    hasLoading() {
+      return !!this.$slots.empty || !!this.$slots.loadedAll || !!this.$slots.loading;
     }
   },
   watch: {
@@ -114,7 +118,7 @@ export default {
       })
     },
     showLoading(newValue) {
-      if (newValue > 0) {
+      if (this.hasLoading && newValue > 0) {
         this.$refs['loading'].scrollIntoView();
       }
     }
@@ -126,7 +130,7 @@ export default {
     },
     focusCurrent(){
       if (this.current < 0) return;
-      let target = this.wrapper.children[this.current + 1]
+      let target = this.wrapper.children[this.current + (this.hasFront ? 1 : 0)]
       this.focusable && target && target.focus();
     },
     initScrollable() {
