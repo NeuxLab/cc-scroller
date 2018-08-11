@@ -30,7 +30,7 @@ export default {
       scrollListener: null,
       loadingTimer: null,
       showLoading: 0,
-      needReset: true
+      needReset: false
     }
   },
   props: {
@@ -114,6 +114,9 @@ export default {
       }
       this.$nextTick(() => {
         //this.initScrollable();
+        if (newValue && this.current >= newValue.length) {
+          this.current = newValue.length - 1;
+        }
         this.focusCurrent();
       })
     },
