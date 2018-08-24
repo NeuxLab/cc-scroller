@@ -86,6 +86,15 @@ export default {
     },
     hasLoading() {
       return !!this.$slots.empty || !!this.$slots.loadedAll || !!this.$slots.loading;
+    },
+    scrollTop: {
+      get() {
+        // not always right
+        return this.offset
+      },
+      set(v) {
+        this.wrapper.scrollTop = v;
+      }
     }
   },
   watch: {
@@ -222,7 +231,11 @@ export default {
     },
     setCurrent(index) {
       if (index < 0 || index >= this.items.length) return
+      if (this.current == index) {
+        this.focusCurrent()
+      }
       this.current = index
+
     },
     clearCurrent() {
       this.current = -1
