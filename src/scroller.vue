@@ -336,6 +336,9 @@ export default {
       }
     }, 100)
     wrapper.addEventListener('scroll', this.scrollListener)
+    this.$el.addEventListener("DOMNodeInsertedIntoDocument", () => {
+      this.landmark();
+    })
   }
 }
 </script>
