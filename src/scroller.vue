@@ -2,7 +2,7 @@
   <div class='scroller select-list extension-list'>
     <draggable element="ol" class='scroller-wrapper list-group' :options="{ disabled: !sortable }" :list="items" ref='wrapper' :class="{'forbid-scroll':!scrollable , 'vertical': !horizontal, 'horizontal': horizontal }" @update="sortChange">
       <slot name="front"></slot>
-      <li class='scroller-item' v-for="(item, index) in items" :class="[ current === index ? active : '', landmarks[index] === 0 ? 'on-wrapper': '' ]" v-on="events" :key="item[key]" tabindex="-1" :data-index="index">
+      <li class='scroller-item' v-for="(item, index) in items" :class="[ current === index ? active : '', selection[index] ? selected : '', landmarks[index] === 0 ? 'on-wrapper': '' ]" v-on="events" :key="item[key]" tabindex="-1" :data-index="index">
         <slot :index='index' :item="item"></slot>
       </li>
       <li ref="loading" v-if="hasLoading"><slot name="loading" v-if="showLoading==1"></slot><slot name="loadedAll" v-if="showLoading==2"></slot><slot name="empty" v-if="showLoading==3"></slot></li>
@@ -30,7 +30,8 @@ export default {
       scrollListener: null,
       loadingTimer: null,
       showLoading: 0,
-      needReset: false
+      needReset: false,
+      selection: []
     }
   },
   props: {
@@ -38,6 +39,10 @@ export default {
     active: {
       type: String,
       default: "selected"
+    },
+    selected: {
+      type: String,
+      default: "in-selection"
     },
     onFetch: Function,
     input: {
@@ -58,6 +63,9 @@ export default {
     sortable() {
       return this.$attrs["sortable"] !== undefined
     },
+    selectable() {
+      return this.$attrs["selectable"] !== undefined
+    },
     performant() {
       return !this.paging;
     },
@@ -73,7 +81,46 @@ export default {
     events() {
       return this.input.reduce((last, v) => {
         last[v] = (event) => {
+          var prev = this.current;
           this.current = parseInt(event.currentTarget.dataset.index);
+          if (this.selectable) {
+            switch(true) {
+              case event.ctrlKey || event.metaKey:
+                // include previous active
+                if (prev !== this.current && !this.selection[prev]) {
+                  this.selection[prev] = true
+                }
+                if (this.selection[this.current]) {
+                  delete this.selection[this.current];
+                } else {
+                  this.selection[this.current] = true
+                }
+                // toggle current
+                if (!this.selection[this.current]) {
+                  this.current = -1;
+                }
+                this.selectionStart = null
+                break;
+              case event.shiftKey:
+                if (this.selectionStart == null) {
+                  this.selectionStart = prev > -1 ? prev: this.current
+                }
+                var last = (prev > -1 ? prev: this.current) 
+                var end = this.current;
+                for (var i = Math.min(this.selectionStart, last); i <= Math.max(this.selectionStart, last); i++) {
+                  delete this.selection[i]
+                }
+                for (var i = Math.min(this.selectionStart, end); i <= Math.max(this.selectionStart, end); i++) {
+                  this.selection[i] = true
+                }
+                break;
+              default:
+                if (v !== "contextmenu") {
+                  this.selection = []
+                  this.selectionStart = null
+                }
+            }
+          }
         }
         return last;
       }, {});
@@ -137,7 +184,7 @@ export default {
   },
   methods: {
     reset() {
-      this.current = -1
+      this.clearCurrent()
       this.needReset = true
     },
     focusCurrent(){
@@ -238,6 +285,7 @@ export default {
 
     },
     clearCurrent() {
+      this.clearSelection()
       this.current = -1
     },
     nextPage() {
@@ -254,6 +302,7 @@ export default {
       }
     },
     nextCurrent(loop = false) {
+      this.clearSelection()
       let target = this.current + 1
       if (!loop && target > this.items.length - 1) {
         return false;
@@ -262,6 +311,7 @@ export default {
       return true
     },
     prevCurrent(loop = false) {
+      this.clearSelection()
       let target =this.current == -1 ? -1 : this.current - 1
       if (!loop && target < 0) return false;
       this.current = (target + this.items.length) % this.items.length
@@ -322,6 +372,12 @@ export default {
       } else {
         this.showLoading = 0;
       }
+    },
+    getSelection() {
+      return Object.keys(this.selection).map(i => this.items[i])
+    },
+    clearSelection() {
+      this.selection = []
     }
   },
   mounted() {
