@@ -374,7 +374,10 @@ export default {
       }
     },
     getSelection() {
-      return Object.keys(this.selection).map(i => this.items[i])
+      return this.getSelectionIndex().map(i => this.items[i])
+    },
+    getSelectionIndex() {
+      return Object.keys(this.selection).map(i => parseInt(i)).filter(i => i>=0)
     },
     clearSelection() {
       this.selection = []
